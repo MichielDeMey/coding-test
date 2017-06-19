@@ -24,8 +24,12 @@ module.exports = {
 
   devServer: {
     host: '0.0.0.0',
-    port: 3000,
+    https: true,
+    port: 443,
     stats: 'normal',
+    watchOptions: {
+      ignored: /node_modules/ // Ignore node modules for improved performance
+    }
   },
 
   plugins: [

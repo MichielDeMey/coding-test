@@ -1,0 +1,61 @@
+version: "3"
+services:
+
+  web:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NGINX_PORT=80
+    volumes:
+      - ./etc/nginx/teamleader_http.conf:/etc/nginx/conf.d/default.conf
+      - ./etc/nginx/teamleader_https.conf:/etc/nginx/conf.d/teamleader.conf
+      - ./etc/certificates/localhost.cert:/etc/ssl/localhost.cert
+      - ./etc/certificates/localhost.key:/etc/ssl/localhost.key
+      - ./server:/var/www/teamleader/api
+    links:
+      - php
+      - webpack
+      - mysql
+      - redis
+
+  webpack:
+    build: client
+    volumes:
+      - ./client:/var/www
+      - /var/www/node_modules
+      - ./etc/certificates/localhost.cert:/etc/ssl/localhost.cert
+      - ./etc/certificates/localhost.key:/etc/ssl/localhost.key
+
+  php:
+    build: server
+    environment:
+      XDEBUG_CONFIG: "remote_host=${LOCAL_IP}"
+      PHP_IDE_CONFIG: "serverName=${SERVER_NAME:-localhost}"
+    volumes:
+      - ./server:/var/www/teamleader/api
+      - /var/www/teamleader/api/vendor
+
+  mysql:
+    image: mysql:5.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=problemthree
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    command: >
+      --requirepass admin123
+
+volumes:
+  mysql:
+  redis:
